@@ -44,7 +44,8 @@ const state = {
     {id:"rainbow", name:"Tim Pelangi", icon:"🌈", progress:45, status:"Sedang mengerjakan", unlocked:[], city:[]}
   ],
   studentTeam: null,
-  answered: false
+studentName: null,
+answered: false
 };
 async function saveStudentData(uid) {
   try {
@@ -61,7 +62,39 @@ async function saveStudentData(uid) {
       },
       { merge: true }
     );
+async function saveStudentProgress() {
+  try {
+    if (!auth.currentUser || state.role !== "student") return;
 
+    const t = state.teams.find(x => x.id === state.studentTeam);
+
+    await setDoc(
+      doc(db, "students", auth.currentUser.uid),
+      {
+        uid: auth.currentUser.uid,
+        role: "student",
+        name: state.studentName,
+        classCode: state.classCode,
+        studentTeam: state.studentTeam,
+        currentLevel: state.currentLevel,
+        paused: state.paused,
+        answered: state.answered,
+
+        teamProgress: t ? t.progress : 0,
+        teamStatus: t ? t.status : "",
+        unlocked: t ? t.unlocked : [],
+        city: t ? t.city : [],
+
+        updatedAt: new Date()
+      },
+      { merge: true }
+    );
+
+    console.log("Progress siswa berhasil disimpan.");
+  } catch (error) {
+    console.error("Gagal menyimpan progress:", error);
+  }
+}
     console.log("Data siswa berhasil disimpan ke Firestore");
   } catch (error) {
     console.error("Gagal menyimpan data siswa:", error);
@@ -137,7 +170,7 @@ async function joinStudent(){
   }
 
   state.role = "student";
-
+  state.studentName = name;
   if(auth.currentUser){
     await setDoc(
       doc(db, "students", auth.currentUser.uid),
@@ -256,8 +289,12 @@ function answer(el,correct){
   state.answered=true;
   el.classList.add(correct?"correct":"wrong");
   const t=state.teams.find(x=>x.id===state.studentTeam);
-  if(correct){
-    t.progress=100; t.status="Mission selesai"; t.unlocked=["Lampu Jalan"];
+ if(correct){
+  t.progress=100; 
+  t.status="Mission selesai"; 
+  t.unlocked=["Lampu Jalan"];
+
+  saveStudentProgress();
     document.getElementById("feedback").innerHTML=`<div class="explain"><strong>✅ Benar!</strong> Cahaya merambat lurus, jadi posisi sumber cahaya harus mempertimbangkan jalur lurus menuju objek.</div>
       <button class="btn btn-primary btn-full" onclick="builder()">🏗️ Bangun Kotamu</button>`;
   } else {
@@ -269,8 +306,32 @@ function answer(el,correct){
 function cityDecor(){return `<div class="gridlines"></div><div class="road-h"></div><div class="road-v"></div>`}
 function renderBuilding(b,i){return `<div class="building draggable ${b.type||''}" data-index="${i}" style="left:${b.x||20}%;top:${b.y||20}%">${b.name}</div>`}
 function builder(){const t=state.teams.find(x=>x.id===state.studentTeam);app.innerHTML=shell(`<main class="page"><div class="hero"><div><div class="level-badge">MODE MEMBANGUN</div><h1>🏗️ Bangun Kotamu</h1><p class="muted">Seret bangunan ke lokasi yang kamu inginkan. Cobalah membuat kota yang terang dan aman.</p></div></div><div class="builder-wrap"><div class="builder-toolbar"><button class="block" onclick="addBuilding('lamp')">💡 Lampu</button><button class="block" onclick="addBuilding('house')">🏠 Rumah</button><button class="block" onclick="addBuilding('hospital')">🏥 Rumah Sakit</button><button class="block" onclick="addBuilding('school')">🏫 Sekolah</button></div><div class="builder" id="builder">${cityDecor()}${t.city.map(renderBuilding).join('')}<div id="beams"></div></div></div><div class="science-check"><div><strong>🔬 Cek Pemahaman</strong><div class="muted">Mengapa posisi lampu perlu diperhatikan saat membangun kota?</div></div><button class="btn btn-primary" onclick="scienceCheck()">Jawab →</button></div></main>`,`<span class="code-pill">${state.classCode}</span>`);setupDrag();drawBeams()}
-function addBuilding(type){const t=state.teams.find(x=>x.id===state.studentTeam);const names={lamp:'💡 Lampu',house:'🏠 Rumah',hospital:'🏥 Rumah Sakit',school:'🏫 Sekolah'};t.city.push({type,name:names[type],x:20+Math.random()*55,y:20+Math.random()*65});builder();toast('Bangunan ditambahkan. Sekarang seret ke tempat yang kamu inginkan.')}
-function setupDrag(){document.querySelectorAll('.draggable').forEach(el=>{let sx,sy,ox,oy,drag=false;el.addEventListener('pointerdown',e=>{drag=true;el.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;const b=state.teams.find(x=>x.id===state.studentTeam).city[+el.dataset.index];ox=b.x||20;oy=b.y||20});el.addEventListener('pointermove',e=>{if(!drag)return;const box=document.getElementById('builder').getBoundingClientRect();const dx=(e.clientX-sx)/box.width*100,dy=(e.clientY-sy)/box.height*100;const b=state.teams.find(x=>x.id===state.studentTeam).city[+el.dataset.index];b.x=Math.max(1,Math.min(90,ox+dx));b.y=Math.max(1,Math.min(85,oy+dy));el.style.left=b.x+'%';el.style.top=b.y+'%';drawBeams()});el.addEventListener('pointerup',()=>{drag=false;toast('Posisi bangunan disimpan.')})})}
+function addBuilding(type){
+  const t=state.teams.find(x=>x.id===state.studentTeam);
+  const names={
+    lamp:'💡 Lampu',
+    house:'🏠 Rumah',
+    hospital:'🏥 Rumah Sakit',
+    school:'🏫 Sekolah'
+  };
+
+  t.city.push({
+    type,
+    name:names[type],
+    x:20+Math.random()*55,
+    y:20+Math.random()*65
+  });
+
+  saveStudentProgress();
+
+  builder();
+  toast('Bangunan ditambahkan. Sekarang seret ke tempat yang kamu inginkan.');
+}
+function setupDrag(){document.querySelectorAll('.draggable').forEach(el=>{let sx,sy,ox,oy,drag=false;el.addEventListener('pointerdown',e=>{drag=true;el.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;const b=state.teams.find(x=>x.id===state.studentTeam).city[+el.dataset.index];ox=b.x||20;oy=b.y||20});el.addEventListener('pointermove',e=>{if(!drag)return;const box=document.getElementById('builder').getBoundingClientRect();const dx=(e.clientX-sx)/box.width*100,dy=(e.clientY-sy)/box.height*100;const b=state.teams.find(x=>x.id===state.studentTeam).city[+el.dataset.index];b.x=Math.max(1,Math.min(90,ox+dx));b.y=Math.max(1,Math.min(85,oy+dy));el.style.left=b.x+'%';el.style.top=b.y+'%';drawBeams()});el.addEventListener('pointerup',()=>{
+  drag=false;
+  saveStudentProgress();
+  toast('Posisi bangunan disimpan.');
+})
 function drawBeams(){const holder=document.getElementById('beams'),canvas=document.getElementById('builder');if(!holder||!canvas)return;holder.innerHTML='';const t=state.teams.find(x=>x.id===state.studentTeam);const lamps=t.city.filter(b=>b.type==='lamp'),targets=t.city.filter(b=>['house','hospital','school'].includes(b.type));lamps.forEach(l=>targets.forEach(target=>{const dx=(target.x-l.x)*canvas.clientWidth/100,dy=(target.y-l.y)*canvas.clientHeight/100,len=Math.sqrt(dx*dx+dy*dy),angle=Math.atan2(dy,dx)*180/Math.PI;const beam=document.createElement('div');beam.className='light-beam';beam.style.left=l.x+'%';beam.style.top=(l.y+3)+'%';beam.style.width=Math.min(len,220)+'px';beam.style.transform=`rotate(${angle}deg)`;holder.appendChild(beam)}))}
 function scienceCheck(){const ans=prompt('Jelaskan dengan kalimatmu sendiri: mengapa lampu tidak boleh diletakkan sembarangan jika kita ingin menerangi sebuah rumah?');if(ans&&ans.toLowerCase().includes('lurus'))toast('Bagus! Kamu menghubungkan jawaban dengan sifat cahaya. 🎉');else toast('Coba gunakan kata kunci: cahaya merambat lurus.')}
 
