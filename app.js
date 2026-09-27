@@ -122,11 +122,40 @@ function selectTeam(id,el){
   el.classList.add("correct");
 }
 
-function joinStudent(){
-  const code=document.getElementById("code").value.trim().toUpperCase();
-  const name=document.getElementById("studentName").value.trim();
-  if(code!==state.classCode){ toast("Kode kelas belum cocok."); return; }
-  if(!name || !state.studentTeam){ toast("Isi nama dan pilih team dulu."); return; }
+async function joinStudent(){
+  const code = document.getElementById("code").value.trim().toUpperCase();
+  const name = document.getElementById("studentName").value.trim();
+
+  if(code !== state.classCode){
+    toast("Kode kelas belum cocok.");
+    return;
+  }
+
+  if(!name || !state.studentTeam){
+    toast("Isi nama dan pilih team dulu.");
+    return;
+  }
+
+  state.role = "student";
+
+  if(auth.currentUser){
+    await setDoc(
+      doc(db, "students", auth.currentUser.uid),
+      {
+        uid: auth.currentUser.uid,
+        role: "student",
+        name: name,
+        classCode: state.classCode,
+        studentTeam: state.studentTeam,
+        currentLevel: state.currentLevel,
+        paused: state.paused,
+        answered: state.answered,
+        updatedAt: new Date()
+      },
+      { merge: true }
+    );
+  }
+
   studentHome(name);
 }
 
