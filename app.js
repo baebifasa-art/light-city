@@ -53,8 +53,10 @@ async function saveStudentData(uid) {
       doc(db, "students", uid),
       {
         uid: uid,
-        role: state.role,
+        role: "student",
+        name: state.studentName,
         classCode: state.classCode,
+        studentTeam: state.studentTeam,
         currentLevel: state.currentLevel,
         paused: state.paused,
         answered: state.answered,
@@ -62,6 +64,13 @@ async function saveStudentData(uid) {
       },
       { merge: true }
     );
+
+    console.log("Data siswa berhasil disimpan ke Firestore");
+  } catch (error) {
+    console.error("Gagal menyimpan data siswa:", error);
+  }
+}
+}
 async function saveStudentProgress() {
   try {
     if (!auth.currentUser || state.role !== "student") return;
@@ -93,11 +102,6 @@ async function saveStudentProgress() {
     console.log("Progress siswa berhasil disimpan.");
   } catch (error) {
     console.error("Gagal menyimpan progress:", error);
-  }
-}
-    console.log("Data siswa berhasil disimpan ke Firestore");
-  } catch (error) {
-    console.error("Gagal menyimpan data siswa:", error);
   }
 }
 const app = document.getElementById("app");
