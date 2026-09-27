@@ -282,3 +282,13 @@ window.selectTeam = selectTeam;
 window.joinStudent = joinStudent;
 window.teacherDashboard = teacherDashboard;
 window.landing = landing;
+
+window.togglePause = togglePause;
+window.unlockNext = unlockNext;
+window.viewCity = viewCity;
+window.lesson = lesson;
+window.mission = mission;
+window.answer = answer;
+window.builder = builder;
+window.addBuilding = addBuilding;
+window.scienceCheck = scienceCheck;
