@@ -3,7 +3,12 @@ import {
   getAuth,
   signInAnonymously
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyC6E08UWOPn98XQ8FvR4gMlMKQmWz12zw4",
   authDomain: "light-city-bd2cd.firebaseapp.com",
@@ -16,11 +21,13 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
-
+const db = getFirestore(firebaseApp);
 signInAnonymously(auth)
-  .then((userCredential) => {
+  .then(async (userCredential) => {
     console.log("Anonymous login berhasil");
-    console.log("User UID:", userCredential.user.uid);
+    console.log("USER UID:", userCredential.user.uid);
+
+    await saveStudentData(userCredential.user.uid);
   })
   .catch((error) => {
     console.error("Anonymous login gagal:", error);
@@ -39,7 +46,27 @@ const state = {
   studentTeam: null,
   answered: false
 };
+async function saveStudentData(uid) {
+  try {
+    await setDoc(
+      doc(db, "students", uid),
+      {
+        uid: uid,
+        role: state.role,
+        classCode: state.classCode,
+        currentLevel: state.currentLevel,
+        paused: state.paused,
+        answered: state.answered,
+        updatedAt: new Date()
+      },
+      { merge: true }
+    );
 
+    console.log("Data siswa berhasil disimpan ke Firestore");
+  } catch (error) {
+    console.error("Gagal menyimpan data siswa:", error);
+  }
+}
 const app = document.getElementById("app");
 
 function toast(msg){
