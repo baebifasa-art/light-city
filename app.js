@@ -1,3 +1,30 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getAuth,
+  signInAnonymously
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC6E08UWOPn98XQ8FvR4gMlMKQmWz12zw4",
+  authDomain: "light-city-bd2cd.firebaseapp.com",
+  projectId: "light-city-bd2cd",
+  storageBucket: "light-city-bd2cd.firebasestorage.app",
+  messagingSenderId: "855563452985",
+  appId: "1:855563452985:web:22e6b1d1b6bca133d383e8",
+  measurementId: "G-D0D1J8YD4B"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
+signInAnonymously(auth)
+  .then((userCredential) => {
+    console.log("Anonymous login berhasil");
+    console.log("User UID:", userCredential.user.uid);
+  })
+  .catch((error) => {
+    console.error("Anonymous login gagal:", error);
+  });
 const state = {
   role: null,
   classCode: "LC-7A29",
