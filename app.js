@@ -275,3 +275,10 @@ function drawBeams(){const holder=document.getElementById('beams'),canvas=docume
 function scienceCheck(){const ans=prompt('Jelaskan dengan kalimatmu sendiri: mengapa lampu tidak boleh diletakkan sembarangan jika kita ingin menerangi sebuah rumah?');if(ans&&ans.toLowerCase().includes('lurus'))toast('Bagus! Kamu menghubungkan jawaban dengan sifat cahaya. 🎉');else toast('Coba gunakan kata kunci: cahaya merambat lurus.')}
 
 landing();
+
+window.teacherLogin = teacherLogin;
+window.studentLogin = studentLogin;
+window.selectTeam = selectTeam;
+window.joinStudent = joinStudent;
+window.teacherDashboard = teacherDashboard;
+window.landing = landing;
